@@ -6,17 +6,12 @@
     "scheme": "lossesandgains",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-"android": {
-  "package": "com.troxellendeavors.lossesandgains",
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/images/android-icon-foreground.png",
-    "backgroundImage": "./assets/images/android-icon-background.png",
-    "monochromeImage": "./assets/images/android-icon-monochrome.png"
-  }
-}
+    "android": {
+      "package": "com.troxellendeavors.lossesandgains",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       }
     },
     "plugins": [

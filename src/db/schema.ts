@@ -1,5 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { seedExercises } from './seed';
+
 // Matches SQLiteProvider's onInit prop: (db: SQLiteDatabase) => Promise<void>
 export async function initDatabase(db: SQLiteDatabase): Promise<void> {
   // WAL mode: writes don't block concurrent reads — keeps the UI thread responsive
@@ -8,6 +10,7 @@ export async function initDatabase(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
 
   await createTables(db);
+  await seedExercises(db);
 }
 
 async function createTables(db: SQLite.SQLiteDatabase): Promise<void> {
