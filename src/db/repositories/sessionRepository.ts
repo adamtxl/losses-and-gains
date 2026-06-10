@@ -262,9 +262,9 @@ export async function logSet(db: SQLiteDatabase, data: LogSetInput): Promise<Log
   let isPersonalRecord = false;
   let prId: string | null = null;
 
-  await db.withExclusiveTransactionAsync(async (txDb) => {
+  await db.withExclusiveTransactionAsync(async () => {
     // PR detection: is this weight heavier than every prior set at this rep count?
-    const prCheck = await txDb.getFirstAsync<{ max_weight: number | null }>(
+    const prCheck = await db.getFirstAsync<{ max_weight: number | null }>(
       `SELECT MAX(ls.weight) AS max_weight
        FROM logged_sets ls
        JOIN logged_exercises le ON ls.logged_exercise_id = le.id
@@ -281,7 +281,7 @@ export async function logSet(db: SQLiteDatabase, data: LogSetInput): Promise<Log
     const tempo = data.repTypeConfig.repType === 'tempo' ? data.repTypeConfig.tempo : null;
     const pauseDuration = data.repTypeConfig.repType === 'pause' ? data.repTypeConfig.pauseDuration : null;
 
-    await txDb.runAsync(
+    await db.runAsync(
       `INSERT INTO logged_sets
          (id, logged_exercise_id, prescribed_set_id, set_number,
           rep_type, tempo, pause_duration, completed_reps, weight,
@@ -307,7 +307,7 @@ export async function logSet(db: SQLiteDatabase, data: LogSetInput): Promise<Log
 
     if (isPersonalRecord) {
       prId = Crypto.randomUUID();
-      await txDb.runAsync(
+      await db.runAsync(
         `INSERT INTO personal_records (id, exercise_id, weight, reps, achieved_at, logged_set_id)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [prId, data.exerciseId, data.weight, data.completedReps, completedAt.slice(0, 10), id],
@@ -315,7 +315,7 @@ export async function logSet(db: SQLiteDatabase, data: LogSetInput): Promise<Log
     }
 
     if (data.isTopSet) {
-      await txDb.runAsync(
+      await db.runAsync(
         'UPDATE logged_exercises SET top_set_weight = ? WHERE id = ?',
         [data.weight, data.loggedExerciseId],
       );
@@ -342,17 +342,17 @@ export async function removeSet(
   setId: string,
   loggedExerciseId: string,
 ): Promise<void> {
-  await db.withExclusiveTransactionAsync(async (txDb) => {
-    const deleted = await txDb.getFirstAsync<{ is_top_set: number }>(
+  await db.withExclusiveTransactionAsync(async () => {
+    const deleted = await db.getFirstAsync<{ is_top_set: number }>(
       'SELECT is_top_set FROM logged_sets WHERE id = ?',
       [setId],
     );
 
-    await txDb.runAsync('DELETE FROM logged_sets WHERE id = ?', [setId]);
+    await db.runAsync('DELETE FROM logged_sets WHERE id = ?', [setId]);
 
     if (deleted?.is_top_set === 1) {
       // Promote the heaviest remaining set as the new top set
-      const next = await txDb.getFirstAsync<{ id: string; weight: number } | null>(
+      const next = await db.getFirstAsync<{ id: string; weight: number } | null>(
         `SELECT id, weight FROM logged_sets
          WHERE logged_exercise_id = ?
          ORDER BY weight DESC, set_number DESC
@@ -361,16 +361,16 @@ export async function removeSet(
       );
 
       if (next) {
-        await txDb.runAsync(
+        await db.runAsync(
           'UPDATE logged_sets SET is_top_set = 1 WHERE id = ?',
           [next.id],
         );
-        await txDb.runAsync(
+        await db.runAsync(
           'UPDATE logged_exercises SET top_set_weight = ? WHERE id = ?',
           [next.weight, loggedExerciseId],
         );
       } else {
-        await txDb.runAsync(
+        await db.runAsync(
           'UPDATE logged_exercises SET top_set_weight = NULL WHERE id = ?',
           [loggedExerciseId],
         );
