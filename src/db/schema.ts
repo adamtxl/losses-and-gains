@@ -13,7 +13,7 @@ export async function initDatabase(db: SQLiteDatabase): Promise<void> {
   await seedExercises(db);
 }
 
-async function createTables(db: SQLite.SQLiteDatabase): Promise<void> {
+async function createTables(db: SQLiteDatabase): Promise<void> {
   // execAsync runs all statements in a single call — safe for DDL only (no user input)
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS exercises (

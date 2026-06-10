@@ -195,15 +195,18 @@ export default function ExerciseScreen() {
   const addExercise = useExerciseStore((s) => s.addExercise);
 
   const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<ExerciseCategory | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // useMemo so the filter only re-runs when exercises or query actually change,
-  // not on every re-render caused by keyboard/scroll/focus events.
+  // Both filters are applied together. Either can be null/empty to act as a no-op.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return exercises;
-    return exercises.filter((e) => e.name.toLowerCase().includes(q));
-  }, [exercises, query]);
+    return exercises.filter((e) => {
+      const matchesQuery    = !q             || e.name.toLowerCase().includes(q);
+      const matchesCategory = !activeCategory || e.category === activeCategory;
+      return matchesQuery && matchesCategory;
+    });
+  }, [exercises, query, activeCategory]);
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -245,6 +248,51 @@ export default function ExerciseScreen() {
           </Pressable>
         )}
       </View>
+
+      {/* Category filter row — horizontal ScrollView, not FlatList, because
+          the chip count is fixed and small. showsHorizontalScrollIndicator={false}
+          hides the scroll bar on both platforms. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScroll}
+        contentContainerStyle={styles.categoryRow}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* "All" chip — selected when no category filter is active */}
+        <Pressable
+          onPress={() => setActiveCategory(null)}
+          style={({ pressed }) => [
+            styles.filterChip,
+            { backgroundColor: activeCategory === null ? theme.accent : theme.backgroundElement },
+            pressed && activeCategory !== null && { backgroundColor: theme.backgroundSelected },
+          ]}
+        >
+          <Text style={[styles.chipText, { color: activeCategory === null ? '#ffffff' : theme.text }]}>
+            All
+          </Text>
+        </Pressable>
+
+        {CATEGORIES.map((cat) => {
+          const active = activeCategory === cat;
+          return (
+            <Pressable
+              key={cat}
+              // Tapping the active chip a second time clears the filter.
+              onPress={() => setActiveCategory(active ? null : cat)}
+              style={({ pressed }) => [
+                styles.filterChip,
+                { backgroundColor: active ? theme.accent : theme.backgroundElement },
+                pressed && !active && { backgroundColor: theme.backgroundSelected },
+              ]}
+            >
+              <Text style={[styles.chipText, { color: active ? '#ffffff' : theme.text }]}>
+                {cap(cat)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
       {/* Exercise list */}
       {/*
@@ -333,6 +381,24 @@ const styles = StyleSheet.create({
   clearButton: {
     fontSize: 14,
     paddingHorizontal: Spacing.one,
+  },
+
+  // Category filter
+  categoryScroll: {
+    height: 36,
+    marginVertical: Spacing.two,
+  },
+  categoryRow: {
+    paddingHorizontal: Spacing.three,
+    gap: Spacing.one + 2,
+  },
+  // Separate from modal `chip` so height is locked without affecting the modal.
+  // justifyContent: 'center' keeps text centred regardless of platform lineHeight variance.
+  filterChip: {
+    height: 36,
+    justifyContent: 'center',
+    borderRadius: 6,
+    paddingHorizontal: Spacing.two,
   },
 
   // List

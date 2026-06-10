@@ -7,17 +7,20 @@ import { StatusBar } from 'expo-status-bar';
 
 import { initDatabase } from '../src/db/schema';
 import { useExerciseStore } from '../src/store/exerciseStore';
+import { useWorkoutStore } from '../src/store/workoutStore';
 
-// Bridges the SQLite context (React) into the Zustand store (outside React).
+// Bridges the SQLite context (React) into the Zustand stores (outside React).
 // Rendered inside <SQLiteProvider> so useSQLiteContext() is valid here.
 // initialize() is stable across renders, so this effect runs exactly once.
 function DatabaseInitializer(): null {
   const db = useSQLiteContext();
-  const initialize = useExerciseStore((s) => s.initialize);
+  const initExercise = useExerciseStore((s) => s.initialize);
+  const initWorkout = useWorkoutStore((s) => s.initialize);
 
   useEffect(() => {
-    initialize(db);
-  }, [db, initialize]);
+    initExercise(db);
+    initWorkout(db);
+  }, [db, initExercise, initWorkout]);
 
   return null;
 }
