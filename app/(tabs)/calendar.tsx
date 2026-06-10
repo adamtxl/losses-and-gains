@@ -17,8 +17,9 @@ import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCalendarStore } from '@/store/calendarStore';
 import { useExerciseStore } from '@/store/exerciseStore';
+import { useTemplateStore } from '@/store/templateStore';
 import { useWorkoutStore } from '@/store/workoutStore';
-import type { LoggedSession } from '@/types';
+import type { LoggedSession, WorkoutTemplate } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -52,26 +53,30 @@ function sessionHasPR(session: LoggedSession): boolean {
   return session.exercises.some((ex) => ex.sets.some((s) => s.isPersonalRecord));
 }
 
-// ─── Plan Modal ───────────────────────────────────────────────────────────────
+// ─── Plan Workout Modal ───────────────────────────────────────────────────────
 
-interface PlanModalProps {
+interface PlanWorkoutModalProps {
   visible: boolean;
   date: string | null;
-  onSave: (notes: string) => void;
+  templates: WorkoutTemplate[];
+  onSave: (notes: string, templateId?: string) => void;
   onClose: () => void;
 }
 
-function PlanModal({ visible, date, onSave, onClose }: PlanModalProps) {
+function PlanWorkoutModal({ visible, date, templates, onSave, onClose }: PlanWorkoutModalProps) {
   const theme = useTheme();
   const [notes, setNotes] = useState('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
   function handleSave() {
-    onSave(notes.trim());
+    onSave(notes.trim(), selectedTemplateId ?? undefined);
     setNotes('');
+    setSelectedTemplateId(null);
   }
 
   function handleClose() {
     setNotes('');
+    setSelectedTemplateId(null);
     onClose();
   }
 
@@ -91,7 +96,63 @@ function PlanModal({ visible, date, onSave, onClose }: PlanModalProps) {
           contentContainerStyle={styles.planContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Notes (optional)</Text>
+          {/* Template picker — horizontal chip row.
+              A horizontal ScrollView (not FlatList) is used because the template
+              count is typically small, so virtualisation isn't needed and a
+              ScrollView keeps the layout simpler. */}
+          <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>TEMPLATE (OPTIONAL)</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.templateChipRow}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* "None" chip */}
+            <Pressable
+              onPress={() => setSelectedTemplateId(null)}
+              style={[
+                styles.templateChip,
+                {
+                  backgroundColor:
+                    selectedTemplateId === null ? theme.accent : theme.backgroundElement,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.templateChipText,
+                  { color: selectedTemplateId === null ? '#ffffff' : theme.text },
+                ]}
+              >
+                None
+              </Text>
+            </Pressable>
+
+            {templates.map((t) => {
+              const selected = selectedTemplateId === t.id;
+              return (
+                <Pressable
+                  key={t.id}
+                  onPress={() => setSelectedTemplateId(t.id)}
+                  style={[
+                    styles.templateChip,
+                    { backgroundColor: selected ? theme.accent : theme.backgroundElement },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.templateChipText,
+                      { color: selected ? '#ffffff' : theme.text },
+                    ]}
+                  >
+                    {t.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>NOTES (OPTIONAL)</Text>
           <TextInput
             style={[styles.notesInput, { backgroundColor: theme.backgroundElement, color: theme.text }]}
             value={notes}
@@ -142,8 +203,9 @@ export default function CalendarScreen() {
   const startSession   = useWorkoutStore((s) => s.startSession);
 
   const allExercises = useExerciseStore((s) => s.exercises);
+  const templates    = useTemplateStore((s) => s.templates);
 
-  const [sheetVisible, setSheetVisible]     = useState(false);
+  const [sheetVisible, setSheetVisible]         = useState(false);
   const [planModalVisible, setPlanModalVisible] = useState(false);
 
   const today = useMemo(() => {
@@ -160,12 +222,19 @@ export default function CalendarScreen() {
     return map;
   }, [allExercises]);
 
-  // O(1) lookup for session by date
+  // O(1) lookup: date → completed session
   const sessionByDate = useMemo(() => {
     const map = new Map<string, LoggedSession>();
     for (const s of recentSessions) map.set(s.date, s);
     return map;
   }, [recentSessions]);
+
+  // O(1) lookup: templateId → template name
+  const templateNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const t of templates) map.set(t.id, t.name);
+    return map;
+  }, [templates]);
 
   useEffect(() => {
     const now = new Date();
@@ -190,7 +259,7 @@ export default function CalendarScreen() {
       };
     }
 
-    // Selected date may not have an entry yet — still highlight it
+    // Selected date may have no entry — still highlight it
     if (selectedDate && !marks[selectedDate]) {
       marks[selectedDate] = { selected: true, selectedColor: theme.accent };
     }
@@ -239,9 +308,9 @@ export default function CalendarScreen() {
     router.push('/(tabs)/');
   }
 
-  async function handleSavePlan(notes: string) {
+  async function handleSavePlan(notes: string, templateId?: string) {
     if (!selectedDate) return;
-    await planWorkout(selectedDate, notes || undefined);
+    await planWorkout(selectedDate, notes || undefined, templateId);
     setPlanModalVisible(false);
   }
 
@@ -262,9 +331,9 @@ export default function CalendarScreen() {
   function renderDateDetail() {
     if (!selectedDate) return null;
 
-    const entry = entriesByDate[selectedDate];
-    const isPast   = selectedDate < today;
-    const isToday  = selectedDate === today;
+    const entry  = entriesByDate[selectedDate];
+    const isPast  = selectedDate < today;
+    const isToday = selectedDate === today;
 
     if (isPast) {
       const session = entry?.loggedSessionId
@@ -315,8 +384,19 @@ export default function CalendarScreen() {
 
     if (isToday) {
       if (entry) {
+        const templateName = entry.workoutTemplateId
+          ? templateNameMap.get(entry.workoutTemplateId)
+          : undefined;
+
         return (
           <View style={styles.detailContent}>
+            {templateName && (
+              <View style={[styles.templateBadge, { backgroundColor: theme.backgroundSelected }]}>
+                <Text style={[styles.templateBadgeText, { color: theme.text }]}>
+                  {templateName}
+                </Text>
+              </View>
+            )}
             {!!entry.notes && (
               <Text style={[styles.planNotesText, { color: theme.textSecondary }]}>
                 {entry.notes}
@@ -358,8 +438,19 @@ export default function CalendarScreen() {
 
     // Future date
     if (entry) {
+      const templateName = entry.workoutTemplateId
+        ? templateNameMap.get(entry.workoutTemplateId)
+        : undefined;
+
       return (
         <View style={styles.detailContent}>
+          {templateName && (
+            <View style={[styles.templateBadge, { backgroundColor: theme.backgroundSelected }]}>
+              <Text style={[styles.templateBadgeText, { color: theme.text }]}>
+                {templateName}
+              </Text>
+            </View>
+          )}
           {!!entry.notes && (
             <Text style={[styles.planNotesText, { color: theme.textSecondary }]}>
               {entry.notes}
@@ -392,11 +483,20 @@ export default function CalendarScreen() {
 
       <View style={[styles.header, { borderBottomColor: theme.backgroundElement }]}>
         <Text style={[styles.screenTitle, { color: theme.text }]}>Calendar</Text>
+        <Pressable
+          onPress={() => router.push('/template/')}
+          style={({ pressed }) => [
+            styles.templatesButton,
+            { backgroundColor: theme.accent },
+            pressed && styles.templatesButtonPressed,
+          ]}
+        >
+          <Text style={styles.templatesButtonText}>Templates</Text>
+        </Pressable>
       </View>
 
-      {/* key on theme.background so the Calendar remounts on dark/light switch,
-          forcing it to re-apply theme colours (react-native-calendars doesn't
-          respond to theme prop changes after first mount). */}
+      {/* key on theme.background so Calendar remounts on dark/light switch —
+          react-native-calendars doesn't respond to theme prop changes after mount. */}
       <Calendar
         key={theme.background}
         onDayPress={handleDayPress}
@@ -448,10 +548,11 @@ export default function CalendarScreen() {
         </Pressable>
       </Modal>
 
-      <PlanModal
+      <PlanWorkoutModal
         visible={planModalVisible}
         date={selectedDate}
-        onSave={(notes) => { void handleSavePlan(notes); }}
+        templates={templates}
+        onSave={(notes, templateId) => { void handleSavePlan(notes, templateId); }}
         onClose={() => setPlanModalVisible(false)}
       />
 
@@ -468,6 +569,9 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.three,
     paddingBottom: Spacing.two,
@@ -476,6 +580,19 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     fontWeight: '700',
+  },
+  templatesButton: {
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two + 4,
+    paddingVertical: 7,
+  },
+  templatesButtonPressed: {
+    opacity: 0.75,
+  },
+  templatesButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 15,
   },
 
   // Bottom sheet
@@ -543,6 +660,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: Spacing.three,
   },
+  templateBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
+  },
+  templateBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   planNotesText: {
     fontSize: 14,
     fontStyle: 'italic',
@@ -558,7 +685,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Plan modal
+  // Plan workout modal
   planScreen: {
     flex: 1,
   },
@@ -582,9 +709,26 @@ const styles = StyleSheet.create({
   planContent: {
     padding: Spacing.three,
     gap: Spacing.two,
+    paddingBottom: Spacing.six,
   },
   inputLabel: {
-    fontSize: 13,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    marginTop: Spacing.two,
+  },
+  templateChipRow: {
+    flexDirection: 'row',
+    gap: Spacing.one + 2,
+    paddingVertical: Spacing.one,
+  },
+  templateChip: {
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two + 2,
+    paddingVertical: 8,
+  },
+  templateChipText: {
+    fontSize: 14,
     fontWeight: '500',
   },
   notesInput: {

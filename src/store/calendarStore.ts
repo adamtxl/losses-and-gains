@@ -23,7 +23,7 @@ interface CalendarStore {
   initialize:  (db: SQLiteDatabase) => Promise<void>;
   loadMonth:   (year: number, month: number) => Promise<void>;
   selectDate:  (date: string | null) => void;
-  planWorkout: (date: string, notes?: string) => Promise<void>;
+  planWorkout: (date: string, notes?: string, templateId?: string) => Promise<void>;
   deletePlan:  (date: string) => Promise<void>;
   linkSession: (date: string, sessionId: string) => Promise<void>;
 }
@@ -63,12 +63,12 @@ export const useCalendarStore = create<CalendarStore>()((set, get) => ({
     set({ selectedDate: date });
   },
 
-  planWorkout: async (date, notes) => {
+  planWorkout: async (date, notes, templateId) => {
     const db = get()._db;
     if (!db) return;
     set({ isLoading: true, error: null });
     try {
-      const entry = await createCalendarEntry(db, { date, notes });
+      const entry = await createCalendarEntry(db, { date, notes, workoutTemplateId: templateId });
       set((state) => ({
         entriesByDate: { ...state.entriesByDate, [date]: entry },
         isLoading: false,
