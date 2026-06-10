@@ -6,6 +6,7 @@ import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { initDatabase } from '../src/db/schema';
+import { useCalendarStore } from '../src/store/calendarStore';
 import { useExerciseStore } from '../src/store/exerciseStore';
 import { useWorkoutStore } from '../src/store/workoutStore';
 
@@ -14,13 +15,15 @@ import { useWorkoutStore } from '../src/store/workoutStore';
 // initialize() is stable across renders, so this effect runs exactly once.
 function DatabaseInitializer(): null {
   const db = useSQLiteContext();
+  const initCalendar = useCalendarStore((s) => s.initialize);
   const initExercise = useExerciseStore((s) => s.initialize);
   const initWorkout = useWorkoutStore((s) => s.initialize);
 
   useEffect(() => {
+    initCalendar(db);
     initExercise(db);
     initWorkout(db);
-  }, [db, initExercise, initWorkout]);
+  }, [db, initCalendar, initExercise, initWorkout]);
 
   return null;
 }

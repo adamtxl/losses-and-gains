@@ -90,9 +90,11 @@ export async function seedExercises(db: SQLiteDatabase): Promise<void> {
   // withTransactionAsync (BEGIN DEFERRED) rather than withExclusiveTransactionAsync
   // (BEGIN EXCLUSIVE) because expo-sqlite v14 keeps an internal read connection open in
   // WAL mode — BEGIN EXCLUSIVE races with it and returns SQLITE_BUSY.
-  await db.withTransactionAsync(async (txn) => {
+  // expo-sqlite v14: withTransactionAsync callback takes no arguments.
+  // Use the outer db reference — all runAsync calls inside are part of the transaction.
+  await db.withTransactionAsync(async () => {
     for (const ex of SEED_EXERCISES) {
-      await txn.runAsync(
+      await db.runAsync(
         `INSERT OR IGNORE INTO exercises (id, name, category, equipment, is_custom, notes, created_at)
          VALUES (?, ?, ?, ?, 0, NULL, ?)`,
         [ex.id, ex.name, ex.category, ex.equipment, SEED_DATE],
