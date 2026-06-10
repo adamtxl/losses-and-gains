@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -294,6 +294,7 @@ export default function TodayScreen() {
   // repository queries at this callsite, not raw SQL.
   const db                   = useWorkoutStore((s) => s._db);
   const activeSession        = useWorkoutStore((s) => s.activeSession);
+  const storeError           = useWorkoutStore((s) => s.error);
   const startSession         = useWorkoutStore((s) => s.startSession);
   const addExerciseToSession = useWorkoutStore((s) => s.addExerciseToSession);
   const logSet               = useWorkoutStore((s) => s.logSet);
@@ -306,6 +307,15 @@ export default function TodayScreen() {
   const [bestSet, setBestSet]                         = useState<LoggedSet | null>(null);
   const [logSetModalVisible, setLogSetModalVisible]   = useState(false);
   const [addExModalVisible, setAddExModalVisible]     = useState(false);
+
+  // Surface any store errors as an Alert so silent failures are visible.
+  const prevErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (storeError && storeError !== prevErrorRef.current) {
+      Alert.alert('Workout error', storeError);
+    }
+    prevErrorRef.current = storeError;
+  }, [storeError]);
 
   // Derive elapsed from the session's startedAt, not from mount time.
   // If the user tabs away and comes back, the timer resumes at the correct value.
@@ -323,6 +333,7 @@ export default function TodayScreen() {
   }, [activeSession?.startedAt]);
 
   async function handleStart() {
+    console.log('[Today] handleStart – db ready:', db !== null);
     const now = new Date();
     await startSession({
       date: now.toISOString().slice(0, 10),

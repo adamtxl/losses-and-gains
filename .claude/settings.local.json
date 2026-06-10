@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs ls)"
+      "Bash(xargs ls)",
+      "Bash(watchman watch-del *)",
+      "Bash(watchman watch-project *)",
+      "Bash(npm install *)",
+      "Bash(npx expo *)"
     ]
   }
 }

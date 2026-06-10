@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { useSQLiteContext } from 'expo-sqlite';
 
@@ -59,7 +60,7 @@ export async function createExercise(
   db: SQLiteDatabase,
   data: Omit<Exercise, 'id' | 'createdAt'>,
 ): Promise<Exercise> {
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
   const createdAt = new Date().toISOString();
 
   await db.runAsync(

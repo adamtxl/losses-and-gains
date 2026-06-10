@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import type {
@@ -147,7 +148,7 @@ export async function createSession(
   db: SQLiteDatabase,
   data: Pick<LoggedSession, 'date' | 'startedAt' | 'calendarEntryId' | 'bodyweightLbs' | 'notes'>,
 ): Promise<LoggedSession> {
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
 
   await db.runAsync(
     `INSERT INTO logged_sessions (id, calendar_entry_id, date, started_at, bodyweight_lbs, notes)
@@ -221,7 +222,7 @@ export async function addLoggedExercise(
   db: SQLiteDatabase,
   data: Pick<LoggedExercise, 'exerciseId' | 'order' | 'workoutExerciseId' | 'notes'> & { sessionId: string },
 ): Promise<LoggedExercise> {
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
 
   await db.runAsync(
     `INSERT INTO logged_exercises (id, session_id, workout_exercise_id, exercise_id, order_index, notes)
@@ -255,7 +256,7 @@ export type LogSetInput = {
 };
 
 export async function logSet(db: SQLiteDatabase, data: LogSetInput): Promise<LoggedSet> {
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
   const completedAt = new Date().toISOString();
 
   let isPersonalRecord = false;
@@ -305,7 +306,7 @@ export async function logSet(db: SQLiteDatabase, data: LogSetInput): Promise<Log
     );
 
     if (isPersonalRecord) {
-      prId = crypto.randomUUID();
+      prId = Crypto.randomUUID();
       await txDb.runAsync(
         `INSERT INTO personal_records (id, exercise_id, weight, reps, achieved_at, logged_set_id)
          VALUES (?, ?, ?, ?, ?, ?)`,
