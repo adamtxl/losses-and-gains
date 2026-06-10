@@ -17,7 +17,9 @@ const SEED_EXERCISES: SeedExercise[] = [
   { id: 'ex-front-squat',   name: 'Front Squat',         category: 'squat', equipment: 'barbell'    },
   { id: 'ex-pause-squat',   name: 'Pause Squat',         category: 'squat', equipment: 'barbell'    },
   { id: 'ex-box-squat',     name: 'Box Squat',           category: 'squat', equipment: 'barbell'    },
-  { id: 'ex-goblet-squat',  name: 'Goblet Squat',        category: 'squat', equipment: 'kettlebell' },
+  { id: 'ex-goblet-squat',     name: 'Goblet Squat',          category: 'squat', equipment: 'kettlebell' },
+  { id: 'ex-ssb-squat',        name: 'SSB Squat',             category: 'squat', equipment: 'barbell'    },
+  { id: 'ex-pause-ssb-squat',  name: 'Pause SSB Squat',       category: 'squat', equipment: 'barbell'    },
 
   // ─── Hinges ──────────────────────────────────────────────────
   { id: 'ex-deadlift',      name: 'Deadlift',            category: 'hinge', equipment: 'barbell'    },
@@ -26,7 +28,10 @@ const SEED_EXERCISES: SeedExercise[] = [
   { id: 'ex-sldl',          name: 'Stiff-Leg Deadlift',  category: 'hinge', equipment: 'barbell'    },
   { id: 'ex-good-morning',  name: 'Good Morning',        category: 'hinge', equipment: 'barbell'    },
   { id: 'ex-hip-thrust',    name: 'Hip Thrust',          category: 'hinge', equipment: 'barbell'    },
-  { id: 'ex-kb-swing',      name: 'Kettlebell Swing',    category: 'hinge', equipment: 'kettlebell' },
+  { id: 'ex-kb-swing',          name: 'Kettlebell Swing',      category: 'hinge', equipment: 'kettlebell' },
+  { id: 'ex-axle-deadlift',    name: 'Axle Deadlift',         category: 'hinge', equipment: 'barbell'    },
+  { id: 'ex-trap-bar-deadlift', name: 'Trap Bar Deadlift',    category: 'hinge', equipment: 'barbell'    },
+  { id: 'ex-deficit-deadlift', name: 'Deficit Deadlift',      category: 'hinge', equipment: 'barbell'    },
 
   // ─── Presses ─────────────────────────────────────────────────
   { id: 'ex-bench-press',       name: 'Bench Press',              category: 'press', equipment: 'barbell'  },
@@ -35,7 +40,12 @@ const SEED_EXERCISES: SeedExercise[] = [
   { id: 'ex-ohp',               name: 'Overhead Press',           category: 'press', equipment: 'barbell'  },
   { id: 'ex-push-press',        name: 'Push Press',               category: 'press', equipment: 'barbell'  },
   { id: 'ex-db-bench',          name: 'Dumbbell Bench Press',     category: 'press', equipment: 'dumbbell' },
-  { id: 'ex-db-ohp',            name: 'Dumbbell Overhead Press',  category: 'press', equipment: 'dumbbell' },
+  { id: 'ex-db-ohp',           name: 'Dumbbell Overhead Press',   category: 'press', equipment: 'dumbbell' },
+  { id: 'ex-log-press',        name: 'Log Press',                 category: 'press', equipment: 'other'   },
+  { id: 'ex-axle-press',       name: 'Axle Press',                category: 'press', equipment: 'barbell' },
+  { id: 'ex-strict-press',     name: 'Strict Press',              category: 'press', equipment: 'barbell' },
+  { id: 'ex-z-press',          name: 'Z-Press',                   category: 'press', equipment: 'barbell' },
+  { id: 'ex-seated-ohp',       name: 'Seated Overhead Press',     category: 'press', equipment: 'barbell' },
 
   // ─── Pulls ───────────────────────────────────────────────────
   { id: 'ex-pull-up',      name: 'Pull-Up',                   category: 'pull', equipment: 'bodyweight' },
@@ -45,11 +55,16 @@ const SEED_EXERCISES: SeedExercise[] = [
   { id: 'ex-cable-row',    name: 'Cable Row',                 category: 'pull', equipment: 'cable'      },
   { id: 'ex-lat-pulldown', name: 'Lat Pulldown',              category: 'pull', equipment: 'cable'      },
   { id: 'ex-db-row',       name: 'Single-Arm Dumbbell Row',   category: 'pull', equipment: 'dumbbell'   },
-  { id: 'ex-face-pull',    name: 'Face Pull',                 category: 'pull', equipment: 'cable'      },
+  { id: 'ex-face-pull',        name: 'Face Pull',                 category: 'pull', equipment: 'cable'      },
+  { id: 'ex-dead-hang',        name: 'Dead Hang',                 category: 'pull', equipment: 'bodyweight' },
+  { id: 'ex-rope-pull',        name: 'Rope Pull',                 category: 'pull', equipment: 'other'      },
+  { id: 'ex-band-face-pull',   name: 'Band Face Pull',            category: 'pull', equipment: 'other'      },
 
   // ─── Carries ─────────────────────────────────────────────────
-  { id: 'ex-farmer-carry',   name: 'Farmer Carry',    category: 'carry', equipment: 'dumbbell' },
-  { id: 'ex-suitcase-carry', name: 'Suitcase Carry',  category: 'carry', equipment: 'dumbbell' },
+  { id: 'ex-farmer-carry',   name: 'Farmer Carry',    category: 'carry', equipment: 'other' },
+  { id: 'ex-suitcase-carry',   name: 'Suitcase Carry',            category: 'carry', equipment: 'other' },
+  { id: 'ex-yoke-carry',       name: 'Yoke Carry',                category: 'carry', equipment: 'other' },
+  { id: 'ex-sandbag-carry',    name: 'Sandbag Carry',             category: 'carry', equipment: 'other' },
 
   // ─── Accessories ─────────────────────────────────────────────
   { id: 'ex-tricep-pushdown', name: 'Tricep Pushdown',       category: 'accessory', equipment: 'cable'      },
@@ -60,7 +75,11 @@ const SEED_EXERCISES: SeedExercise[] = [
   { id: 'ex-leg-extension',   name: 'Leg Extension',         category: 'accessory', equipment: 'machine'    },
   { id: 'ex-calf-raise',      name: 'Calf Raise',            category: 'accessory', equipment: 'machine'    },
   { id: 'ex-ab-wheel',        name: 'Ab Wheel Rollout',      category: 'accessory', equipment: 'other'      },
-  { id: 'ex-plank',           name: 'Plank',                 category: 'accessory', equipment: 'bodyweight' },
+  { id: 'ex-plank',            name: 'Plank',                     category: 'accessory', equipment: 'bodyweight' },
+  { id: 'ex-tricep-extension', name: 'Tricep Extension',          category: 'accessory', equipment: 'barbell'    },
+  { id: 'ex-hammer-curl',      name: 'Hammer Curl',               category: 'accessory', equipment: 'dumbbell'   },
+  { id: 'ex-rear-delt-row',    name: 'Rear Delt Row',             category: 'accessory', equipment: 'dumbbell'   },
+  { id: 'ex-band-pull-apart',  name: 'Band Pull-Apart',           category: 'accessory', equipment: 'other'      },
 ];
 
 const SEED_DATE = '2024-01-01T00:00:00.000Z';
@@ -68,7 +87,10 @@ const SEED_DATE = '2024-01-01T00:00:00.000Z';
 export async function seedExercises(db: SQLiteDatabase): Promise<void> {
   // Single transaction: all inserts commit together or not at all.
   // INSERT OR IGNORE skips any row whose id already exists — safe to re-run every startup.
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  // withTransactionAsync (BEGIN DEFERRED) rather than withExclusiveTransactionAsync
+  // (BEGIN EXCLUSIVE) because expo-sqlite v14 keeps an internal read connection open in
+  // WAL mode — BEGIN EXCLUSIVE races with it and returns SQLITE_BUSY.
+  await db.withTransactionAsync(async (txn) => {
     for (const ex of SEED_EXERCISES) {
       await txn.runAsync(
         `INSERT OR IGNORE INTO exercises (id, name, category, equipment, is_custom, notes, created_at)
