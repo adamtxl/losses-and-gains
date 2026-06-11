@@ -11,6 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -278,6 +279,7 @@ function ExerciseCard({
 export default function TemplateEditorScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const templates      = useTemplateStore((s) => s.templates);
@@ -381,7 +383,7 @@ export default function TemplateEditorScreen() {
   if (!template) {
     return (
       <View style={[styles.screen, { backgroundColor: theme.background }]}>
-        <View style={[styles.header, { borderBottomColor: theme.backgroundElement }]}>
+        <View style={[styles.header, { borderBottomColor: theme.backgroundElement, paddingTop: insets.top }]}>
           <Pressable onPress={() => router.back()} hitSlop={12}>
             <Text style={[styles.backBtn, { color: theme.accent }]}>‹ Back</Text>
           </Pressable>
@@ -400,7 +402,7 @@ export default function TemplateEditorScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
 
-      <View style={[styles.header, { borderBottomColor: theme.backgroundElement }]}>
+      <View style={[styles.header, { borderBottomColor: theme.backgroundElement, paddingTop: insets.top }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Text style={[styles.backBtn, { color: theme.accent }]}>‹ Back</Text>
         </Pressable>

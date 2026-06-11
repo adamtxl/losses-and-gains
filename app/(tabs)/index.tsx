@@ -13,11 +13,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { getBestSetForExercise } from '@/db/repositories/sessionRepository';
 import { useTheme } from '@/hooks/use-theme';
 import { useExerciseStore } from '@/store/exerciseStore';
+import { useTemplateStore } from '@/store/templateStore';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { ActiveExerciseCard } from '@/components/workout/ActiveExerciseCard';
 import type { Exercise, LoggedExercise, LoggedSet } from '@/types';
@@ -289,6 +291,7 @@ function AddExerciseModal({ visible, onClose, onSelect }: AddExerciseModalProps)
 
 export default function TodayScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   // _db is accessed here to call getBestSetForExercise directly per the architecture —
   // repository queries at this callsite, not raw SQL.
@@ -301,12 +304,14 @@ export default function TodayScreen() {
   const finishSession        = useWorkoutStore((s) => s.finishSession);
   const cancelSession        = useWorkoutStore((s) => s.cancelSession);
   const allExercises         = useExerciseStore((s) => s.exercises);
+  const templates            = useTemplateStore((s) => s.templates);
 
   const [elapsed, setElapsed]                         = useState(0);
   const [logSetTarget, setLogSetTarget]               = useState<LogSetTarget | null>(null);
   const [bestSet, setBestSet]                         = useState<LoggedSet | null>(null);
   const [logSetModalVisible, setLogSetModalVisible]   = useState(false);
   const [addExModalVisible, setAddExModalVisible]     = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId]   = useState<string | null>(null);
 
   // Surface any store errors as an Alert so silent failures are visible.
   const prevErrorRef = useRef<string | null>(null);
@@ -339,6 +344,29 @@ export default function TodayScreen() {
       date: now.toISOString().slice(0, 10),
       startedAt: now.toISOString(),
     });
+
+    // Pre-load template exercises after session is created.
+    // Read activeSession from getState() — not the hook value, which is stale
+    // in this closure (same pattern as calendar.tsx's handleStartWorkout).
+    if (selectedTemplateId) {
+      const template = templates.find((t) => t.id === selectedTemplateId);
+      if (template && template.exercises.length > 0) {
+        const session = useWorkoutStore.getState().activeSession;
+        if (session) {
+          for (let i = 0; i < template.exercises.length; i++) {
+            const we = template.exercises[i];
+            await addExerciseToSession({
+              sessionId: session.id,
+              exerciseId: we.exerciseId,
+              workoutExerciseId: we.id,
+              order: i,
+            });
+          }
+        }
+      }
+    }
+
+    setSelectedTemplateId(null);
   }
 
   function handleCancel() {
@@ -418,8 +446,73 @@ export default function TodayScreen() {
   if (!activeSession) {
     return (
       <View style={[styles.screen, { backgroundColor: theme.background }]}>
-        <View style={styles.idle}>
-          <Text style={[styles.idleTitle, { color: theme.text }]}>Ready to train?</Text>
+
+        <View style={[styles.idleHeader, { borderBottomColor: theme.backgroundElement, paddingTop: insets.top }]}>
+          <Text style={[styles.idleScreenTitle, { color: theme.text }]}>Today</Text>
+        </View>
+
+        <View style={styles.idleBody}>
+          {templates.length > 0 && (
+            <>
+              <Text style={[styles.templateLabel, { color: theme.textSecondary }]}>
+                Select Template (optional)
+              </Text>
+              {/*
+                Horizontal ScrollView (not FlatList) — template count is small so
+                virtualisation isn't needed, and ScrollView keeps layout simpler here.
+              */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.templateChipRow}
+                keyboardShouldPersistTaps="handled"
+              >
+                <Pressable
+                  onPress={() => setSelectedTemplateId(null)}
+                  style={[
+                    styles.templateChip,
+                    {
+                      backgroundColor:
+                        selectedTemplateId === null ? theme.accent : theme.backgroundElement,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.templateChipText,
+                      { color: selectedTemplateId === null ? '#ffffff' : theme.text },
+                    ]}
+                  >
+                    None
+                  </Text>
+                </Pressable>
+
+                {templates.map((t) => {
+                  const selected = selectedTemplateId === t.id;
+                  return (
+                    <Pressable
+                      key={t.id}
+                      onPress={() => setSelectedTemplateId(t.id)}
+                      style={[
+                        styles.templateChip,
+                        { backgroundColor: selected ? theme.accent : theme.backgroundElement },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.templateChipText,
+                          { color: selected ? '#ffffff' : theme.text },
+                        ]}
+                      >
+                        {t.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </>
+          )}
+
           <Pressable
             onPress={handleStart}
             style={({ pressed }) => [
@@ -431,6 +524,7 @@ export default function TodayScreen() {
             <Text style={styles.startButtonText}>Start Workout</Text>
           </Pressable>
         </View>
+
       </View>
     );
   }
@@ -550,21 +644,43 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // State 1
-  idle: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  // State 1 — idle
+  idleHeader: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.three,   // + insets.top applied inline
+    paddingBottom: Spacing.two,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  idleScreenTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  idleBody: {
+    padding: Spacing.three,
     gap: Spacing.three,
   },
-  idleTitle: {
-    fontSize: 22,
-    fontWeight: '600',
+  templateLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  templateChipRow: {
+    flexDirection: 'row',
+    gap: Spacing.one + 2,
+  },
+  templateChip: {
+    borderRadius: 8,
+    paddingHorizontal: Spacing.two + 2,
+    paddingVertical: 8,
+  },
+  templateChipText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   startButton: {
     borderRadius: 12,
     paddingHorizontal: Spacing.five,
     paddingVertical: Spacing.three,
+    alignSelf: 'center',
   },
   startButtonPressed: {
     opacity: 0.8,

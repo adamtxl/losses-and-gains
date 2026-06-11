@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -54,6 +55,7 @@ function TemplateRow({ template, onPress }: TemplateRowProps) {
 export default function TemplateListScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const templates      = useTemplateStore((s) => s.templates);
   const isLoading      = useTemplateStore((s) => s.isLoading);
@@ -86,7 +88,7 @@ export default function TemplateListScreen() {
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
 
       {/* All stack screens use headerShown: false globally, so we build our own. */}
-      <View style={[styles.header, { borderBottomColor: theme.backgroundElement }]}>
+      <View style={[styles.header, { borderBottomColor: theme.backgroundElement, paddingTop: insets.top }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Text style={[styles.backBtn, { color: theme.accent }]}>‹ Back</Text>
         </Pressable>

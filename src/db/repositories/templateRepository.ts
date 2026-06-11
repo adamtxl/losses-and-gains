@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import type {
@@ -152,7 +153,7 @@ export async function createTemplate(
   name: string,
   description?: string,
 ): Promise<WorkoutTemplate> {
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
   const now = new Date().toISOString();
 
   await db.runAsync(
@@ -190,7 +191,7 @@ export async function addExerciseToTemplate(
   db: SQLiteDatabase,
   data: { templateId: string; exerciseId: string; order: number; notes?: string },
 ): Promise<WorkoutExercise> {
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
 
   await db.runAsync(
     `INSERT INTO workout_exercises (id, template_id, exercise_id, order_index, notes)
@@ -243,7 +244,7 @@ export async function addPrescribedSet(
   db: SQLiteDatabase,
   data: AddPrescribedSetInput,
 ): Promise<PrescribedSet> {
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
   const repType = data.repTypeConfig.repType;
   const tempo = data.repTypeConfig.repType === 'tempo' ? data.repTypeConfig.tempo : null;
   const pauseDuration = data.repTypeConfig.repType === 'pause' ? data.repTypeConfig.pauseDuration : null;
