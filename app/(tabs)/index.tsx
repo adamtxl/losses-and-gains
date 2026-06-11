@@ -13,6 +13,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+import { PlateCalculator } from '@/components/workout/PlateCalculator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomTabInset, Spacing } from '@/constants/theme';
@@ -73,6 +75,7 @@ function LogSetModal({
   const [rpe, setRpe] = useState('');
   const [isTopSet, setIsTopSet] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [calcVisible, setCalcVisible] = useState(false);
 
   // Reset fields each time the modal opens (visible transitions false → true).
   useEffect(() => {
@@ -108,10 +111,26 @@ function LogSetModal({
             <Text style={[styles.modalTitle, { color: theme.text }]} numberOfLines={1}>
               {target?.exerciseName ?? 'Log Set'}
             </Text>
+            <Pressable onPress={() => setCalcVisible(true)} hitSlop={12} style={styles.calcBtn}>
+              <Text style={[styles.calcBtnText, { color: theme.textSecondary }]}>🧮</Text>
+            </Pressable>
             <Pressable onPress={onClose} hitSlop={12}>
               <Text style={[styles.modalCancel, { color: theme.textSecondary }]}>Cancel</Text>
             </Pressable>
           </View>
+
+          <Modal
+            visible={calcVisible}
+            animationType="slide"
+            onRequestClose={() => setCalcVisible(false)}
+          >
+            <View style={[styles.calcScreen, { backgroundColor: theme.background }]}>
+              <PlateCalculator
+                initialWeight={parseFloat(weight) || undefined}
+                onClose={() => setCalcVisible(false)}
+              />
+            </View>
+          </Modal>
 
           {bestSet !== null && (
             <View style={[styles.bestSetBanner, { backgroundColor: theme.backgroundElement }]}>
@@ -903,5 +922,17 @@ const styles = StyleSheet.create({
   separator: {
     height: StyleSheet.hairlineWidth,
     marginLeft: Spacing.three,
+  },
+
+  // Plate calculator button in log-set modal header
+  calcBtn: {
+    marginRight: Spacing.two,
+  },
+  calcBtnText: {
+    fontSize: 20,
+  },
+  calcScreen: {
+    flex: 1,
+    paddingTop: Spacing.four,
   },
 });

@@ -146,5 +146,10 @@ async function createTables(db: SQLiteDatabase): Promise<void> {
       achieved_at   TEXT NOT NULL,
       logged_set_id TEXT NOT NULL REFERENCES logged_sets(id)
     );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
 }

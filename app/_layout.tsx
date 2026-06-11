@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { initDatabase } from '../src/db/schema';
 import { useCalendarStore } from '../src/store/calendarStore';
 import { useExerciseStore } from '../src/store/exerciseStore';
+import { useSettingsStore } from '../src/store/settingsStore';
 import { useTemplateStore } from '../src/store/templateStore';
 import { useWorkoutStore } from '../src/store/workoutStore';
 
@@ -18,15 +19,17 @@ function DatabaseInitializer(): null {
   const db = useSQLiteContext();
   const initCalendar  = useCalendarStore((s) => s.initialize);
   const initExercise  = useExerciseStore((s) => s.initialize);
+  const initSettings  = useSettingsStore((s) => s.initialize);
   const initTemplate  = useTemplateStore((s) => s.initialize);
   const initWorkout   = useWorkoutStore((s) => s.initialize);
 
   useEffect(() => {
     initCalendar(db);
     initExercise(db);
+    initSettings(db);
     initTemplate(db);
     initWorkout(db);
-  }, [db, initCalendar, initExercise, initTemplate, initWorkout]);
+  }, [db, initCalendar, initExercise, initSettings, initTemplate, initWorkout]);
 
   return null;
 }

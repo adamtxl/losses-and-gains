@@ -20,6 +20,7 @@ const SEED_EXERCISES: SeedExercise[] = [
   { id: 'ex-goblet-squat',     name: 'Goblet Squat',          category: 'squat', equipment: 'kettlebell' },
   { id: 'ex-ssb-squat',        name: 'SSB Squat',             category: 'squat', equipment: 'barbell'    },
   { id: 'ex-pause-ssb-squat',  name: 'Pause SSB Squat',       category: 'squat', equipment: 'barbell'    },
+  { id: 'ex-bulgarian-split-squat', name: 'Bulgarian Split Squat', category: 'squat', equipment: 'barbell' },
 
   // ─── Hinges ──────────────────────────────────────────────────
   { id: 'ex-deadlift',      name: 'Deadlift',            category: 'hinge', equipment: 'barbell'    },
